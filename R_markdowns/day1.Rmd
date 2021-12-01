@@ -1,0 +1,53 @@
+---
+title: "Day 1"
+author: "Sara"
+date: "12/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tibbletime)
+```
+
+
+## Getting the data
+
+For now, read from the local text file
+Todo for later to read automatically?
+
+```{r}
+data <- read_table("../data/day1.txt", col_names = 'values')
+glimpse(data)
+```
+##First challenge
+how many of the differences between subsequent numbers are positive
+```{r}
+data %>%
+  mutate(diff = c(NA,diff(values))) %>%
+  filter(diff > 0, na.rm = TRUE) %>%
+  nrow()
+```
+
+## Second challenge
+rather than taking subsequent values, first calculate the sum of a rolling window of 3, and then check how many of those subsequent values are positive
+
+generate appropriate rolling function
+```{r}
+rolling_sum_of_3 <- rollify(sum, window = 3)
+```
+
+
+```{r}
+data %>%
+  mutate(rolling_sum = rolling_sum_of_3(values)) %>%
+  mutate(diff_rolling = c(NA,diff(rolling_sum))) %>%
+  filter(diff_rolling > 0, na.rm = TRUE) %>%
+  nrow()
+  
+```
+yay, solved today's puzzle in R as well :-)
