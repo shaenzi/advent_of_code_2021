@@ -1,0 +1,98 @@
+---
+title: "Day 2"
+author: "Sara"
+date: "12/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(tibbletime)
+```
+
+
+## Getting the data
+
+For now, read from the local text file
+Todo for later to read automatically?
+
+```{r}
+data <- read_table("../data/day2.txt", col_names = c("direction", "value"),
+                   cols(direction = col_character(),
+                                            value = col_integer()))
+glimpse(data)
+```
+
+## First challenge
+sum of forward is x, sum of down minus sum of up is depth, solution is their multiplication
+```{r}
+my_pivot <- data %>%
+  group_by(direction) %>%
+  summarise(sum = sum(value))
+my_pivot
+```
+
+```{r}
+x <- my_pivot %>% 
+  filter(direction == 'forward') %>%
+  pull(sum)
+total_down <- my_pivot %>%
+  filter(direction == 'down')%>%
+  pull(sum)
+total_up <- my_pivot %>%
+  filter(direction == 'up')%>%
+  pull(sum)
+depth <- total_down - total_up
+solution <- depth * x
+solution
+```
+
+## Second challenge
+now the calculation gets more complicated: new variable called aim
+
+* down adds to aim
+* up removes from aim
+* forward adds to horizontal, multiplies with aim then adds to depth
+
+```{r}
+heLper_depth <- function(data_tibble) {
+  depth <- 0
+  aim <- 0
+  
+  for (i in 1:nrow(data_tibble)){
+    my_val <- data_tibble[i, "value"] %>% pull(value)
+    if(data_tibble[i, "direction"] == "forward"){
+        depth <- depth +my_val  * aim
+    } else if (data_tibble[i, "direction"] == "down"){
+      aim <- aim + my_val
+    }  else if (data_tibble[i, "direction"] == "up"){
+      aim <- aim - my_val
+    }
+  }
+  
+  return(depth)
+}
+```
+
+uuhh, just found an ugly false friend between python and R: in python, `length(df)` gives me the number of rows, whereas length in R gives me the number of columns.... whoa.
+
+```{r}
+depth <- heLper_depth(data)
+hor <- data %>%
+  filter(direction == "forward") %>%
+  summarise(sum = sum(value)) %>%
+  pull(sum)
+  
+```
+
+```{r}
+solution <- hor * depth
+solution
+```
+
+
+yay, solved today's puzzle in R as well :-)
