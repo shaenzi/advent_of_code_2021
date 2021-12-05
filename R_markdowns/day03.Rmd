@@ -1,0 +1,85 @@
+---
+title: "Day 3"
+author: "Sara"
+date: "3/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(tibbletime)
+```
+
+
+## Getting the data
+
+For now, read from the local text file
+Todo for later to read automatically?
+
+```{r}
+data <- read_table("../data/day3.txt", col_names = c("bin_values"))
+glimpse(data)
+```
+
+## First challenge
+separate strings into separate columns
+```{r}
+data <- data %>%
+  separate(bin_values, paste(1:12), sep="(?<=[0-1])")
+```
+
+ah! cannot find function to transpose, or function for mode. or i am just too tired.
+```{r}
+as_tibble(t(data)) %>%
+  summarise(mode = mode())
+```
+
+## Second challenge
+now the calculation gets more complicated: new variable called aim
+
+* down adds to aim
+* up removes from aim
+* forward adds to horizontal, multiplies with aim then adds to depth
+
+```{r}
+heLper_depth <- function(data_tibble) {
+  depth <- 0
+  aim <- 0
+  
+  for (i in 1:nrow(data_tibble)){
+    my_val <- data_tibble[i, "value"] %>% pull(value)
+    if(data_tibble[i, "direction"] == "forward"){
+        depth <- depth +my_val  * aim
+    } else if (data_tibble[i, "direction"] == "down"){
+      aim <- aim + my_val
+    }  else if (data_tibble[i, "direction"] == "up"){
+      aim <- aim - my_val
+    }
+  }
+  
+  return(depth)
+}
+```
+
+uuhh, just found an ugly false friend between python and R: in python, `length(df)` gives me the number of rows, whereas length in R gives me the number of columns.... whoa.
+
+```{r}
+depth <- heLper_depth(data)
+hor <- data %>%
+  filter(direction == "forward") %>%
+  summarise(sum = sum(value)) %>%
+  pull(sum)
+  
+```
+
+```{r}
+solution <- hor * depth
+solution
+```
+
+
+yay, solved today's puzzle in R as well :-)
